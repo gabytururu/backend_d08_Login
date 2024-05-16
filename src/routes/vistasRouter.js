@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ProductManagerMONGO as ProductManager } from '../dao/productManagerMONGO.js';
 import { CartManagerMONGO as CartManager } from '../dao/cartManagerMONGO.js';
 import { SessionsManagerMONGO as SessionsManager } from '../dao/sessionsManagerMONGO.js';
-import { auth } from '../middleware/auth.js';
+import { auth, authManager, authUserIsLogged } from '../middleware/auth.js';
 export const router=Router();
 
 const productManager = new ProductManager();
@@ -10,21 +10,14 @@ const cartManager = new CartManager();
 const sessionsManager = new SessionsManager();
 
 router.get('/',async(req,res)=>{
-    
-    try{ 
-        res.setHeader('Content-type', 'text/html');
-        res.status(200).render('home')
-    }catch(error){
-        res.setHeader('Content-type', 'application/json');
-        return res.status(500).json({
-            error:`Unexpected server error (500) - try again or contact support`,
-            message: error.message
-        })
-    }
+    res.status(301).redirect('/login');
 })
 
-router.get('/products',async(req,res)=>{
+router.get('/products',auth,async(req,res)=>{
     let {pagina, limit, sort, ...query}=req.query
+
+    const userProfile = req.session.user
+    console.log('se acaba de logear: ',userProfile)
 
     if (!pagina) pagina=1;
     if (!limit) limit=10;
@@ -43,7 +36,8 @@ router.get('/products',async(req,res)=>{
             hasPrevPage, 
             hasNextPage, 
             prevPage,
-            nextPage
+            nextPage,
+            userProfile
         })
     }catch(error){
         res.setHeader('Content-type', 'application/json');
@@ -54,8 +48,10 @@ router.get('/products',async(req,res)=>{
     }
 })
 
-router.get('/products/:pid',async(req,res)=>{
+router.get('/products/:pid',auth,async(req,res)=>{ 
     const {pid} = req.params
+    const userProfile = req.session.user
+    // console.log('se acaba de logear: ',userProfile)
    
     try{
         const matchingProduct = await productManager.getProductByFilter({_id:pid})
@@ -66,7 +62,7 @@ router.get('/products/:pid',async(req,res)=>{
             })
         }
         res.setHeader('Content-type', 'text/html');
-        return res.status(200).render('singleProduct',{matchingProduct})
+        return res.status(200).render('singleProduct',{matchingProduct,userProfile})
     }catch(error){
         res.setHeader('Content-type', 'application/json');
         return res.status(500).json({
@@ -76,7 +72,7 @@ router.get('/products/:pid',async(req,res)=>{
     }
 })
 
-router.get('/carts',async(req,res)=>{
+router.get('/carts',authManager,async(req,res)=>{
     try{
         const carts = await cartManager.getCarts()
         if(!carts){
@@ -97,7 +93,7 @@ router.get('/carts',async(req,res)=>{
     
 })
 
-router.get('/carts/:cid',async(req,res)=>{
+router.get('/carts/:cid',auth,async(req,res)=>{
     const {cid} = req.params
    
     try{
@@ -119,17 +115,17 @@ router.get('/carts/:cid',async(req,res)=>{
     }
 })
 
-router.get('/chat',async(req,res)=>{
+router.get('/chat',auth,async(req,res)=>{
     res.setHeader('Content-type', 'text/html');
     res.status(200).render('chat')
 })
 
-router.get('/registro', async(req,res)=>{
+router.get('/registro', authUserIsLogged,async(req,res)=>{
     res.setHeader('Content-type', 'text/html');
     res.status(200).render('registro')
 })
 
-router.get('/login', async(req,res)=>{
+router.get('/login',authUserIsLogged, async(req,res)=>{
     res.setHeader('Content-type', 'text/html');
     res.status(200).render('login')
 })

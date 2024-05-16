@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { CartManagerMONGO as CartManager } from '../dao/cartManagerMONGO.js';
 import { ProductManagerMONGO as ProductManager } from '../dao/productManagerMONGO.js';
 import { isValidObjectId } from 'mongoose';
+import {auth,authManager} from '../middleware/auth.js'
 export const router=Router();
 
 const cartManager = new CartManager()
 const productManager = new ProductManager()
 
-router.get('/',async(req,res)=>{
+router.get('/',authManager,async(req,res)=>{
     res.setHeader('Content-type', 'application/json');
 
     try{
@@ -27,7 +28,7 @@ router.get('/',async(req,res)=>{
     }
 })
 
-router.get('/:cid', async(req,res)=>{
+router.get('/:cid',auth, async(req,res)=>{
     const {cid}=req.params
     res.setHeader('Content-type', 'application/json');
 
@@ -53,7 +54,7 @@ router.get('/:cid', async(req,res)=>{
 
 })
 
-router.post('/', async(req,res)=>{
+router.post('/',auth, async(req,res)=>{
     res.setHeader('Content-type', 'application/json')
     try {
         const newCart = await cartManager.createCart()
@@ -74,7 +75,7 @@ router.post('/', async(req,res)=>{
     }
 })
 
-router.put('/:cid', async(req,res)=>{
+router.put('/:cid',auth, async(req,res)=>{
     const {cid} = req.params;
     const newCartDetails = req.body
     res.setHeader('Content-type', 'application/json')
@@ -174,7 +175,7 @@ router.put('/:cid', async(req,res)=>{
     }
 })
 
-router.put('/:cid/products/:pid', async(req,res)=>{
+router.put('/:cid/products/:pid',auth, async(req,res)=>{
     const {cid, pid} = req.params
     const {qty} = req.body
     res.setHeader('Content-type', 'application/json');
@@ -266,7 +267,7 @@ router.put('/:cid/products/:pid', async(req,res)=>{
     }
 })
 
-router.delete('/:cid', async(req,res)=>{
+router.delete('/:cid',auth, async(req,res)=>{
     const {cid} = req.params
     res.setHeader('Content-type', 'application/json');
 
@@ -293,7 +294,7 @@ router.delete('/:cid', async(req,res)=>{
     }
 })
 
-router.delete('/:cid/products/:pid', async(req,res)=>{
+router.delete('/:cid/products/:pid',auth, async(req,res)=>{
     const {cid, pid} = req.params;
     res.setHeader('Content-type', 'application/json');
 

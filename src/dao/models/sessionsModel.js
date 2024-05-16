@@ -13,6 +13,10 @@ const sessionsSchema = new mongoose.Schema(
         rol:{
             type:String,
             default:"user"
+        },
+        cart:{
+            type:mongoose.Types.ObjectId,
+            ref:"carts"
         }
     },
     {timestamps:true}

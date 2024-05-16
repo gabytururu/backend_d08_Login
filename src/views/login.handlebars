@@ -6,6 +6,13 @@
 <form action="/api/sessions/login" method="post">
     <input type="email" name="email" placeholder="email">
     <input type="password" name="password" placeholder="password">
+    <input type="text" name="web" value="web" hidden>
     <br>
     <input type="submit" value="login">
 </form>
+
+<h3>¿Aún no tienes una cuenta?</h3>
+<a href="/registro" class="href">Regístrate</a>
+
+<br>
+{{>menu}}

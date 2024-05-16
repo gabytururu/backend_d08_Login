@@ -8,7 +8,7 @@ export class CartManagerMONGO{
 
     async createCart(){
         let cart = (await cartsModel.create({}))  
-        return cart 
+        return cart.toJSON() 
     }   
 
     async getCartById(id){

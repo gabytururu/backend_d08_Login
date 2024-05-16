@@ -21,7 +21,7 @@
                 </div>
                 {{!-- just changed id to _id .. see if keeps working --}}
                 <div class="buybuttonContainer">
-                    <button class="buyButton" onClick="finalizePurchase('{{matchingProduct._id}}')">comprar</button>        
+                    <button class="buyButton" onClick="finalizePurchase('{{matchingProduct._id}}')" data-user-cid="{{userProfile.cart}}">comprar</button>        
                 </div>
             </div>
         </div>

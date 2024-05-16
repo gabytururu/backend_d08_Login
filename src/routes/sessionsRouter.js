@@ -2,10 +2,13 @@ import { Router } from 'express';
 export const router=Router();
 import { SessionsManagerMONGO as SessionsManager } from '../dao/sessionsManagerMONGO.js';
 import { hashPassword } from '../utils.js';
+import { CartManagerMONGO as CartManager } from '../dao/cartManagerMONGO.js';
+import { authUserIsLogged } from '../middleware/auth.js';
 
 const sessionsManager = new SessionsManager()
+const cartManager = new CartManager()
 
-router.post('/registro',async(req,res)=>{
+router.post('/registro',authUserIsLogged,async(req,res)=>{
     let {nombre,email,password} = req.body
     res.setHeader('Content-type', 'application/json');
 
@@ -46,7 +49,10 @@ router.post('/registro',async(req,res)=>{
     password = hashPassword(password)
 
     try{
-        let newUser = await sessionsManager.createUser({nombre,email,password})
+        let newCart = await cartManager.createCart()
+        console.log('el new cart pre usuario: ', newCart)
+        let newUser = await sessionsManager.createUser({nombre,email,password,cart:newCart._id})
+        console.log('el nuevo usuario con carrito: ',newUser)
 
         newUser = {...newUser}
         delete newUser.password
@@ -57,7 +63,8 @@ router.post('/registro',async(req,res)=>{
             payload:{
                 nombre:newUser.nombre,
                 email: newUser.email,
-                rol: newUser.rol
+                rol: newUser.rol,
+                carrito: newUser.cart
             }
         })
     }catch(error){
@@ -68,8 +75,8 @@ router.post('/registro',async(req,res)=>{
     }
 })
 
-router.post('/login', async(req,res)=>{
-    let {email,password}=req.body
+router.post('/login',authUserIsLogged,async(req,res)=>{
+    let {email,password,web}=req.body
     res.setHeader('Content-type', 'application/json');
 
     if(!email || !password){        
@@ -86,22 +93,36 @@ router.post('/login', async(req,res)=>{
             message: ` The email ${email} does not match a valid email format. Other types of data structures are not accepted as an email address. Please verify and try again`
         })
     }
-
+  
     try {
+        let userIsValid;
+        const userIsManager={
+            nombre:'Manager Session',
+            email:'adminCoder@coder.com',
+            password:'adminCod3r123',
+            rol:'admin',
+            cart: 'No Aplica'
+        }
+
         const emailIsValid = await sessionsManager.getUserByFilter({email})
-        if(!emailIsValid){
+        if(!emailIsValid && email !== userIsManager.email){
             return res.status(404).json({
                 error:`Error: email not found`,
                 message: `Failed to complete login. The email provided (email:${email} was not found in our database. Please verify and try again`
             })
         }
 
-        let userIsValid = await sessionsManager.getUserByFilter({email, password: hashPassword(password)})
-        if(!userIsValid){
-            return res.status(401).json({
-                error:`Failed to complete login: Invalid credentials`,
-                message: `The password you provided does not match our records. Please verify and try again.`
-            })
+        if(email === userIsManager.email && password === userIsManager.password){
+            userIsValid = userIsManager
+            console.log('el user is valid:',userIsValid) 
+        }else{
+            userIsValid = await sessionsManager.getUserByFilter({email, password: hashPassword(password)})
+            if(!userIsValid){
+                return res.status(401).json({
+                    error:`Failed to complete login: Invalid credentials`,
+                    message: `The password you provided does not match our records. Please verify and try again.`
+                })
+            }
         }
 
         userIsValid = {...userIsValid}
@@ -109,14 +130,18 @@ router.post('/login', async(req,res)=>{
 
         req.session.user=userIsValid
 
+        if(web){
+            return res.status(301).redirect('/products')
+        }
+
         return res.status(200).json({
             status: 'success',
             message: 'User login was completed successfully',
             payload: {
                 nombre: userIsValid.nombre,
                 email: userIsValid.email,
-                rol:userIsValid.rol
-
+                rol:userIsValid.rol,
+                carrito:userIsValid.cart
             }
         })      
 
@@ -126,4 +151,19 @@ router.post('/login', async(req,res)=>{
             message: `${error.message}`
         })
     }
+})
+
+router.get('/logout', async(req,res)=>{
+    req.session.destroy(error=>{
+        if(error){
+            res.setHeader('Content-type', 'application/json');
+            return res.status(500).json({
+                error:`Error 500 Server failed unexpectedly, please try again later`,
+                message: `${error.message}`
+            })
+        }
+    })
+
+    res.setHeader('Content-type', 'application/json');
+    return res.status(200).json({payload:'Logout Exitoso'})
 })

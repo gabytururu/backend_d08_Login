@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ProductManagerMONGO as ProductManager } from '../dao/productManagerMONGO.js';
 import { isValidObjectId } from 'mongoose';
+import {auth,authManager} from '../middleware/auth.js'
 export const router=Router();
 
 const productManager = new ProductManager()
@@ -62,7 +63,7 @@ router.get('/:id',async(req,res)=>{
     }
 })
 
-router.post('/', async(req, res)=>{
+router.post('/',auth, async(req, res)=>{
     const {title, description, code, price, stock,category,thumbnails} = req.body
     res.setHeader('Content-type', 'application/json');
 
@@ -114,9 +115,9 @@ router.post('/', async(req, res)=>{
     }    
 })  
 
-router.put('/:id', async(req,res)=>{
+router.put('/:id',auth, async(req,res)=>{
     const {id} = req.params
-    const propsToUpdate = req.body // was let
+    const propsToUpdate = req.body 
     res.setHeader('Content-type', 'application/json');
 
     if(!isValidObjectId(id)){
@@ -173,7 +174,7 @@ router.put('/:id', async(req,res)=>{
     }
 })
 
-router.delete('/:id', async(req,res)=>{
+router.delete('/:id',authManager,async(req,res)=>{
     const {id} = req.params
     res.setHeader('Content-type', 'application/json');
 
