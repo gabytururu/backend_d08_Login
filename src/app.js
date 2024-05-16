@@ -11,6 +11,7 @@ import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
 import __dirname from './utils.js';
 import {generateDynamicSessionSecret} from './utils.js'
+import MongoStore from 'connect-mongo';
 
 const PORT = 8080;
 const app = express();
@@ -20,7 +21,13 @@ app.use(express.urlencoded({extended:true}));
 app.use(sessions({
     secret: generateDynamicSessionSecret(),
     resave:true,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store:MongoStore.create({
+        ttl:3600,
+        mongoUrl: "mongodb+srv://gabriela:wO2Mjvm7zojeyD7T@cluster0testgaby.l3ofz0y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0TestGaby",
+        dbName:'ecommerce',
+        collectionName:'browserSessions'
+    })
 }))
 
 app.engine('handlebars', engine());
