@@ -9,11 +9,8 @@ const sessionsManager = new SessionsManager()
 const cartManager = new CartManager()
 
 router.post('/registro',authUserIsLogged,async(req,res)=>{
-    let {nombre,email,password} = req.body
+    let {nombre,email,password,web} = req.body
     res.setHeader('Content-type', 'application/json');
-
-    // for (let property in req.body){
-    // }
 
     if(!nombre || !email || !password){        
         return res.status(400).json({
@@ -21,7 +18,6 @@ router.post('/registro',authUserIsLogged,async(req,res)=>{
             message: `Please make sure all mandatory fields(*)are completed to proceed with signup.`
         })
     }
-
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if(!emailRegex.test(email)){
@@ -49,13 +45,16 @@ router.post('/registro',authUserIsLogged,async(req,res)=>{
     password = hashPassword(password)
 
     try{
-        let newCart = await cartManager.createCart()
-        console.log('el new cart pre usuario: ', newCart)
+        const newCart = await cartManager.createCart()
         let newUser = await sessionsManager.createUser({nombre,email,password,cart:newCart._id})
-        console.log('el nuevo usuario con carrito: ',newUser)
 
         newUser = {...newUser}
         delete newUser.password
+
+        //front end not working -- future improvement (see /js/signup)
+        if(web){
+            return res.status(301).redirect('/login')
+        }
 
         res.status(200).json({
             status:"success",
@@ -95,7 +94,7 @@ router.post('/login',authUserIsLogged,async(req,res)=>{
     }
   
     try {
-        let userIsValid;
+       
         const userIsManager={
             nombre:'Manager Session',
             email:'adminCoder@coder.com',
@@ -103,7 +102,6 @@ router.post('/login',authUserIsLogged,async(req,res)=>{
             rol:'admin',
             cart: 'No Aplica'
         }
-
         const emailIsValid = await sessionsManager.getUserByFilter({email})
         if(!emailIsValid && email !== userIsManager.email){
             return res.status(404).json({
@@ -112,9 +110,9 @@ router.post('/login',authUserIsLogged,async(req,res)=>{
             })
         }
 
+        let userIsValid;
         if(email === userIsManager.email && password === userIsManager.password){
             userIsValid = userIsManager
-            console.log('el user is valid:',userIsValid) 
         }else{
             userIsValid = await sessionsManager.getUserByFilter({email, password: hashPassword(password)})
             if(!userIsValid){
@@ -124,6 +122,8 @@ router.post('/login',authUserIsLogged,async(req,res)=>{
                 })
             }
         }
+
+        
 
         userIsValid = {...userIsValid}
         delete userIsValid.password
@@ -144,7 +144,6 @@ router.post('/login',authUserIsLogged,async(req,res)=>{
                 carrito:userIsValid.cart
             }
         })      
-
     } catch (error) {
         return res.status(500).json({
             error:`Error 500 Server failed unexpectedly, please try again later`,

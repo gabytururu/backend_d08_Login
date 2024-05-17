@@ -17,7 +17,9 @@ router.get('/products',auth,async(req,res)=>{
     let {pagina, limit, sort, ...query}=req.query
 
     const userProfile = req.session.user
-    console.log('se acaba de logear: ',userProfile)
+    userProfile.isUser = userProfile.rol === 'user';
+    userProfile.isAdmin = userProfile.rol === 'admin';
+    
 
     if (!pagina) pagina=1;
     if (!limit) limit=10;

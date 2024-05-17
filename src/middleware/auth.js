@@ -8,7 +8,6 @@ export const auth=(req,res,next)=>{
     next()
 }
 
-
 export const authManager=(req,res,next)=>{
     if(!req.session.user){
         res.setHeader('Content-type', 'application/json');
@@ -17,13 +16,12 @@ export const authManager=(req,res,next)=>{
         })
     }
 
-    if(req.session.user.rol !== 'manager'){
+    if(req.session.user.rol !== 'admin'){
         res.setHeader('Content-type', 'application/json');
         return res.status(403).json({
             error:`Failed to Login - Invalid credentials - This resource is only Open for Managers'.`,
         })
     }
-
     next()
 }
 

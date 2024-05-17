@@ -1,19 +1,21 @@
+{{>menuLoggedUser}}
 <div class="mainContainer">
-    {{>menuLoggedUser}}
     <div class="titles">
         <h1>Bienvenid@ a la Tienda {{userProfile.nombre}}</h1>
         <div class="profile">
             <p>Usuario: {{userProfile.nombre}}</p>
             <p>email: {{userProfile.email}}</p>
             <p>Rol: {{userProfile.rol}}</p>
-            <p>Tu Carrito: {{userProfile.cart}}</p>
-            <a href="/carts/{{userProfile.cart}}" class="profileInfo" id="userCart" data-user-cid="{{userProfile.cart}}">Tu Carrito</a>
+            <p> Id# de tu Carrito: {{userProfile.cart}}</p>
+            {{#if userProfile.isUser}}
+                <a href="/carts/{{userProfile.cart}}" class="userCarts" id="userCart" data-user-cid="{{userProfile.cart}}">Ver tu Carrito</a>
+            {{/if}}
+             {{#if userProfile.isAdmin}}
+                <a href="/carts" class="userCarts" id="allCarts">Ver todos los Carritos</a>
+            {{/if}}
+           
         </div>
-         <div class="navButtons">
-            <a href="/" class="href">Ir a Home</a>
-            <a href="/carts" class="href">Ver Carritos</a>
-            <a href="/chat" class="href">Ir al Chat</a>
-        </div>
+         
     </div>   
     <div class="productsContainer">
         <div class="productsPageNav">
